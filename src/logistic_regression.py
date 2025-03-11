@@ -1,6 +1,11 @@
 
 import numpy as np
 
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+from sklearn.linear_model import LogisticRegression
+
 from scripts.data.linear import linear_data, export_linear_data, read_linear_data
 
 
@@ -36,19 +41,33 @@ if __name__ == '__main__':
     if y.ndim == 1:
         y = y.reshape(-1, 1)
     print(X.shape, y.shape)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
     
-    W = np.random.randn(X.shape[1], y.shape[1])
-    b = np.random.randn(y.shape[1], 1)
-    print(W.shape, b.shape)
+    W0 = np.random.randn(X.shape[1], y.shape[1])
+    b0 = np.random.randn(y.shape[1], 1)
+    print(W0.shape, b0.shape)
 
-    epochs = 1000
-    lr = 0.01
+    epochs = 100
+    lr = 0.1
+    W, b = W0.copy(), b0.copy()
     for i in range(epochs):
-        w, b, loss = train(W, b, X, y, lr)
-        print(f'Epoch {i}, loss {loss}')
+        w, b, loss = train(W, b, X_train, y_train, lr)
+        # print(f'Epoch {i}, loss {loss}')
 
-        y_pred = X @ w + b
-        print(y_pred.shape)
+    y_pred = X_test @ w + b
+    y_pred = 1 / (1 + np.exp(-y_pred) + 1e-6)
+    y_pred = (y_pred > 0.5).astype(int)
+    print(accuracy_score(y_test, y_pred))
+
+    model = LogisticRegression()
+    model.fit(X_train, y_train.ravel())
+    y_pred = model.predict(X_test)
+    # y_pred = y_pred.reshape(-1, 1)
+    # print(y_pred.shape, y_test.shape)
+    print(accuracy_score(y_test, y_pred))
+
 
 
 
